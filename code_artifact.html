@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>國中校園大探險！七年級行政處室解謎測驗</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Canvas Confetti Library for visual effects -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Google Fonts: Zen Maru Gothic / Noto Sans TC -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+  <!-- QRCode.js Library for dynamic QR Code generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Zen Maru Gothic', 'Noto Sans TC', sans-serif;
+      background-color: #f0f7ff;
+    }
+    .card-shadow {
+      box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.15), 0 8px 10px -6px rgba(59, 130, 246, 0.1);
+    }
+    .btn-option {
+      transition: all 0.2s ease-in-out;
+    }
+    .btn-option:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .bounce-animation {
+      animation: bounce 0.6s ease infinite alternate;
+    }
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-8px); }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between">
+
+  <!-- Navigation Bar -->
+  <header class="bg-indigo-600 text-white sticky top-0 z-50 shadow-md">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-school text-yellow-300 text-2xl"></i>
+        <h1 class="font-bold text-lg md:text-xl tracking-wide">七年級校園大探險：處室解謎測驗</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="toggleTeacherDashboardModal()" class="bg-indigo-800 hover:bg-indigo-900 text-white font-bold text-xs md:text-sm px-3 py-1.5 rounded-full flex items-center gap-1 transition shadow-sm">
+          <i class="fa-solid fa-chart-pie text-amber-300"></i>
+          <span>教師後台統計</span>
+        </button>
+        <button onclick="toggleQRCodeModal()" class="bg-amber-400 hover:bg-amber-500 text-indigo-950 font-bold text-xs md:text-sm px-3 py-1.5 rounded-full flex items-center gap-1 transition shadow-sm">
+          <i class="fa-solid fa-qrcode text-base"></i>
+          <span>學生掃碼測驗</span>
+        </button>
+        <button onclick="toggleCheatSheet()" class="bg-indigo-500 hover:bg-indigo-700 text-xs md:text-sm px-3 py-1.5 rounded-full flex items-center gap-1 transition">
+          <i class="fa-solid fa-book-open"></i>
+          <span>處室寶典</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-3xl mx-auto px-4 py-6 flex-grow w-full">
+
+    <!-- Student Info Entry Card (First Page Screen) -->
+    <div id="start-container" class="bg-white rounded-3xl p-6 md:p-8 card-shadow border border-indigo-100 mb-6 text-center">
+      <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
+        <i class="fa-solid fa-id-card"></i>
+      </div>
+      <h2 class="text-xl md:text-2xl font-black text-slate-800 mb-2">歡迎參加七年級校園處室解謎測驗！</h2>
+      <p class="text-sm text-slate-500 mb-6">開始挑戰前，請填寫你的班級與暱稱，測驗成績將會記錄並傳送給老師喔！</p>
+      
+      <form id="student-info-form" onsubmit="startQuizWithInfo(event)" class="max-w-md mx-auto space-y-4 text-left">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">班級 <span class="text-rose-500">*</span></label>
+          <input type="text" id="input-class-name" required placeholder="例如：701 或 7年1班" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm font-bold text-slate-800">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">座號或暱稱 <span class="text-rose-500">*</span></label>
+          <input type="text" id="input-student-name" required placeholder="例如：01號 小明" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 text-sm font-bold text-slate-800">
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 rounded-xl shadow-lg hover:shadow-indigo-200 transition text-base flex items-center justify-center gap-2">
+          <span>開始解謎挑戰</span>
+          <i class="fa-solid fa-play"></i>
+        </button>
+      </form>
+    </div>
+
+    <!-- Progress & Score Header (Hidden initially) -->
+    <div id="quiz-header" class="hidden bg-white rounded-2xl p-4 mb-6 card-shadow border border-indigo-50 items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg" id="quiz-avatar">
+          <i class="fa-solid fa-compass text-xl"></i>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500 font-medium" id="student-badge-display">同學：701班 小明</div>
+          <div class="text-lg font-bold text-indigo-900" id="progress-text">第 1 / 10 題</div>
+        </div>
+      </div>
+      
+      <!-- Progress Bar -->
+      <div class="w-1/3 bg-gray-200 h-3 rounded-full overflow-hidden hidden sm:block">
+        <div id="progress-bar" class="bg-indigo-500 h-full w-0 transition-all duration-300"></div>
+      </div>
+
+      <div class="text-right">
+        <div class="text-xs text-gray-500 font-medium">當前得分</div>
+        <div class="text-xl font-black text-amber-500" id="score-text">0 分</div>
+      </div>
+    </div>
+
+    <!-- Quiz Card Container (Hidden initially) -->
+    <div id="quiz-container" class="hidden bg-white rounded-3xl p-6 md:p-8 card-shadow border border-indigo-100 relative overflow-hidden">
+      <!-- Tag / Scenario Header -->
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 font-bold text-xs mb-4" id="question-tag">
+        <i class="fa-solid fa-location-dot"></i> 情境地圖
+      </div>
+
+      <!-- Question Text -->
+      <h3 class="text-lg md:text-xl font-bold text-slate-800 mb-6 leading-relaxed" id="question-text">
+        題目載入中...
+      </h3>
+
+      <!-- Options List -->
+      <div class="space-y-3 mb-6" id="options-container">
+        <!-- Dynamic options insert here -->
+      </div>
+
+      <!-- Analysis / Feedback Box (Hidden initially) -->
+      <div id="analysis-card" class="hidden rounded-2xl p-4 transition-all duration-300 mb-4">
+        <div class="flex items-start gap-3">
+          <div class="text-2xl shrink-0" id="analysis-icon">💡</div>
+          <div>
+            <h4 class="font-bold text-base mb-1" id="analysis-title">觀念解析</h4>
+            <p class="text-sm leading-relaxed" id="analysis-text">詳細說明內容...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Action -->
+      <div class="flex justify-end pt-2">
+        <button id="next-btn" onclick="nextQuestion()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-full shadow-lg transition duration-200 items-center gap-2">
+          <span>下一題</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Result Card (Shown after finishing quiz) -->
+    <div id="result-container" class="hidden bg-white rounded-3xl p-8 card-shadow border border-indigo-100 text-center">
+      <div class="w-24 h-24 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4 text-5xl bounce-animation">
+        <i class="fa-solid fa-trophy"></i>
+      </div>
+      <h2 class="text-2xl font-black text-slate-800 mb-2">測驗完成！挑戰成功！</h2>
+      <p class="text-gray-600 text-sm mb-6">你已經晉升為國中校園通，再也沒有處室能難倒你了！</p>
+      
+      <div class="bg-indigo-50 rounded-2xl p-6 mb-6 max-w-sm mx-auto">
+        <div class="text-sm text-gray-500 font-medium">你的最終得分</div>
+        <div class="text-4xl font-black text-indigo-600 my-1" id="final-score">100</div>
+        <div class="text-xs text-indigo-400" id="final-rating">表現太給力了！校園小達人就是你！</div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-center gap-3">
+        <button onclick="restartQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-full shadow-md transition">
+          <i class="fa-solid fa-rotate-right mr-1"></i> 再次挑戰
+        </button>
+        <button onclick="toggleTeacherDashboardModal()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-3 rounded-full shadow-md transition">
+          <i class="fa-solid fa-chart-line mr-1"></i> 查看班級統計
+        </button>
+        <button onclick="toggleCheatSheet()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3 rounded-full transition">
+          <i class="fa-solid fa-sitemap mr-1"></i> 查看處室組織架構
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal: Teacher Dashboard Statistics -->
+  <div id="dashboard-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="bg-indigo-900 text-white p-4 px-6 flex justify-between items-center">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+          <i class="fa-solid fa-chart-pie text-amber-400"></i> 教師後台測驗統計成績單
+        </h3>
+        <button onclick="toggleTeacherDashboardModal()" class="text-white/80 hover:text-white text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-6">
+        <!-- Overview Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 text-center">
+            <div class="text-xs font-bold text-indigo-500">總測驗人次</div>
+            <div class="text-3xl font-black text-indigo-900 mt-1" id="dash-total-count">0</div>
+          </div>
+          <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center">
+            <div class="text-xs font-bold text-emerald-600">全校/平均得分</div>
+            <div class="text-3xl font-black text-emerald-800 mt-1" id="dash-avg-score">0 分</div>
+          </div>
+          <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100 text-center">
+            <div class="text-xs font-bold text-amber-600">滿分挑戰者</div>
+            <div class="text-3xl font-black text-amber-800 mt-1" id="dash-perfect-count">0 人</div>
+          </div>
+        </div>
+
+        <!-- Student Records Table -->
+        <div>
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-indigo-600"></i> 最新測驗紀錄明細
+            </h4>
+            <span class="text-xs text-slate-400" id="dash-sync-status">即時紀錄中</span>
+          </div>
+          <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-100 text-slate-700 text-xs font-bold uppercase">
+                <tr>
+                  <th class="p-3">時間</th>
+                  <th class="p-3">班級</th>
+                  <th class="p-3">暱稱 / 座號</th>
+                  <th class="p-3 text-right">得分</th>
+                </tr>
+              </thead>
+              <tbody id="dash-table-body" class="divide-y divide-slate-100 text-slate-700">
+                <tr>
+                  <td colspan="4" class="p-4 text-center text-slate-400">目前尚無測驗紀錄</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal / Cheat Sheet: School Offices Reference -->
+  <div id="cheatsheet-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+      <!-- Modal Header -->
+      <div class="bg-indigo-600 text-white p-4 px-6 flex justify-between items-center">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+          <i class="fa-solid fa-sitemap"></i> 國中四大處室與獨立單位職掌表
+        </h3>
+        <button onclick="toggleCheatSheet()" class="text-white/80 hover:text-white text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <!-- Modal Body -->
+      <div class="p-6 overflow-y-auto space-y-4 text-sm leading-relaxed">
+        <div class="border border-indigo-100 bg-indigo-50/50 p-4 rounded-2xl">
+          <h4 class="font-bold text-indigo-900 flex items-center gap-2 text-base mb-1">
+            <i class="fa-solid fa-book text-indigo-600"></i> 教務處
+          </h4>
+          <p class="text-slate-600 text-xs"><strong>主管業務：</strong>課務編排、成績統計、註冊轉學、設備與圖書教學。</p>
+          <ul class="list-disc list-inside text-xs text-slate-500 mt-1 space-y-0.5">
+            <li><strong>教學組：</strong>排課、調代課、期考定期評量。</li>
+            <li><strong>註冊組：</strong>學籍管理、成績登錄、學生證補發。</li>
+            <li><strong>設備組：</strong>教科書發放、實驗室與教學儀器維護。</li>
+          </ul>
+        </div>
+
+        <div class="border border-emerald-100 bg-emerald-50/50 p-4 rounded-2xl">
+          <h4 class="font-bold text-emerald-900 flex items-center gap-2 text-base mb-1">
+            <i class="fa-solid fa-user-shield text-emerald-600"></i> 學務處
+          </h4>
+          <p class="text-slate-600 text-xs"><strong>主管業務：</strong>學生生活輔導、品德教育、體育活動及環境衛生。</p>
+          <ul class="list-disc list-inside text-xs text-slate-500 mt-1 space-y-0.5">
+            <li><strong>訓育組：</strong>社團活動、隔宿露營、校外教學、畢業旅行。</li>
+            <li><strong>生輔組/生教組：</strong>請假缺曠、校規管理、服儀檢查、反霸凌。</li>
+            <li><strong>體育組：</strong>校運會、班際競賽、體育器材借用。</li>
+            <li><strong>衛生組：</strong>環境清潔、資源回收、健康檢查。</li>
+          </ul>
+        </div>
+
+        <div class="border border-amber-100 bg-amber-50/50 p-4 rounded-2xl">
+          <h4 class="font-bold text-amber-900 flex items-center gap-2 text-base mb-1">
+            <i class="fa-solid fa-building-user text-amber-600"></i> 總務處
+          </h4>
+          <p class="text-slate-600 text-xs"><strong>主管業務：</strong>校園修繕、財務公物管理、款項收付及工程建置。</p>
+          <ul class="list-disc list-inside text-xs text-slate-500 mt-1 space-y-0.5">
+            <li><strong>事務組：</strong>課桌椅維護、修繕報修、校舍安全管理。</li>
+            <li><strong>出納組：</strong>學雜費繳費單收付、各項費用發放。</li>
+            <li><strong>文書組：</strong>公文收發及檔案管理。</li>
+          </ul>
+        </div>
+
+        <div class="border border-rose-100 bg-rose-50/50 p-4 rounded-2xl">
+          <h4 class="font-bold text-rose-900 flex items-center gap-2 text-base mb-1">
+            <i class="fa-solid fa-heart text-rose-600"></i> 輔導室
+          </h4>
+          <p class="text-slate-600 text-xs"><strong>主管業務：</strong>心理諮商、生涯輔導、特殊教育及性平推廣。</p>
+          <ul class="list-disc list-inside text-xs text-slate-500 mt-1 space-y-0.5">
+            <li><strong>輔導組：</strong>個別諮商、心理測驗、心情傾訴。</li>
+            <li><strong>資料組：</strong>生涯發展規劃、國中適性入學輔導。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: QR Code Generator & Display for Students -->
+  <div id="qrcode-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl relative">
+      <button onclick="toggleQRCodeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="inline-flex items-center justify-center w-12 h-12 bg-amber-100 text-amber-600 rounded-full mb-3 text-2xl">
+        <i class="fa-solid fa-qrcode"></i>
+      </div>
+
+      <h3 class="text-xl font-black text-slate-800 mb-1">學生掃碼測驗 QR Code</h3>
+      <p class="text-xs text-gray-500 mb-4">請學生使用手機或平板掃描即可開始答題</p>
+
+      <!-- URL Input Area -->
+      <div class="mb-4 text-left">
+        <label class="block text-xs font-bold text-gray-600 mb-1">測驗網址：</label>
+        <div class="flex gap-2">
+          <input type="text" id="qr-url-input" class="w-full text-xs p-2 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 bg-slate-50 text-slate-700" placeholder="請輸入本網頁發布後的網址">
+          <button onclick="updateQRCode()" class="bg-indigo-600 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-indigo-700 transition shrink-0">更新</button>
+        </div>
+        <p class="text-[11px] text-amber-600 mt-1"><i class="fa-solid fa-circle-info mr-1"></i>上傳至網站伺服器後，將網址貼入上方即可更新 QR Code。</p>
+      </div>
+
+      <!-- QR Code Canvas Display -->
+      <div class="bg-indigo-50/50 border-2 border-dashed border-indigo-200 p-4 rounded-2xl inline-block mb-4">
+        <div id="qrcode-container" class="flex justify-center items-center"></div>
+      </div>
+
+      <div class="flex gap-2 justify-center">
+        <button onclick="downloadQRCode()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+          <i class="fa-solid fa-download"></i> 下載 QR Code 圖檔
+        </button>
+        <button onclick="printQRPoster()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+          <i class="fa-solid fa-print"></i> 列印教室宣導海報
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Effects via Web Audio API -->
+  <script>
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      }
+    }
+
+    function playCheerSound() {
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3); // A5
+
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } catch (e) {
+        console.log("Audio not supported or blocked");
+      }
+    }
+
+    function playWrongSound() {
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+        osc.frequency.setValueAtTime(164.81, audioCtx.currentTime + 0.15); // E3
+
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } catch (e) {
+        console.log("Audio not supported or blocked");
+      }
+    }
+  </script>
+
+  <!-- Quiz & App Logic Script -->
+  <script>
+    // Updated Quiz Questions Data with Answer Distribution Balanced across A, B, C, D
+    const questions = [
+      {
+        scenario: "學籍與證件辦理",
+        question: "小明不小心把學生證弄丢了，想要申請補發學生證以及查詢過往的成績紀錄，他應該去哪一個處室的什麼組？",
+        options: [
+          { text: "教務處 - 註冊組", correct: true }, // [A]
+          { text: "學務處 - 生輔組", correct: false },
+          { text: "總務處 - 文書組", correct: false },
+          { text: "輔導室 - 資料組", correct: false }
+        ],
+        analysis: "【教務處註冊組】專門負責學生的學籍管理、成績登錄、學生證補發以及轉學與免試入學業務喔！"
+      },
+      {
+        scenario: "課堂與課課表變更",
+        question: "今天早上數學老師生病請假，學校安排了代課老師前來，並調整了課表。這是哪一個單位的職掌業務？",
+        options: [
+          { text: "學務處 - 訓育組", correct: false },
+          { text: "教務處 - 教學組", correct: true }, // [B]
+          { text: "輔導室 - 輔導組", correct: false },
+          { text: "總務處 - 事務組", correct: false }
+        ],
+        analysis: "【教務處教學組】主要負責編排全校課表、安排教師代課、定期評量（期考）及語文競賽等課務相關事宜。"
+      },
+      {
+        scenario: "校園活動與社團",
+        question: "七年級新生非常期待參加每週的社團活動，還有下學期的校外教學（隔宿露營/畢業旅行）。請問這些活動是由哪一個組別主辦的？",
+        options: [
+          { text: "學務處 - 體育組", correct: false },
+          { text: "教務處 - 設備組", correct: false },
+          { text: "學務處 - 訓育組", correct: true }, // [C]
+          { text: "總務處 - 事務組", correct: false }
+        ],
+        analysis: "【學務處訓育組】負責辦理學生班會、社團活動、畢業旅行、校外教學以及品德教育推廣！"
+      },
+      {
+        scenario: "生活規範與校園安全",
+        question: "如果遇到服裝儀容檢查、需要辦理請假缺曠課手續，或是校園內遇到霸凌行為需要反映，應該找哪一個組別？",
+        options: [
+          { text: "輔導室 - 輔導組", correct: false },
+          { text: "教務處 - 註冊組", correct: false },
+          { text: "人事室", correct: false },
+          { text: "學務處 - 生活輔導組（生輔/生教組）", correct: true } // [D]
+        ],
+        analysis: "【學務處生輔組（生教組）】負責維持校規秩序、請假缺曠課處理、服儀管理、校園安全防護及反霸凌宣導。"
+      },
+      {
+        scenario: "設施損壞與報修",
+        question: "教室裡的電燈忽然壞掉了，或是課桌椅搖晃破損需要請人維修，班長應該去哪一個處室填寫公物報修單？",
+        options: [
+          { text: "教務處 - 設備組", correct: false },
+          { text: "學務處 - 衛生組", correct: false },
+          { text: "總務處 - 事務組", correct: true }, // [C]
+          { text: "主計室", correct: false }
+        ],
+        analysis: "【總務處事務組】是學校的「後勤管家」，專門負責校舍與硬體設備修繕、購置公物及校園安全防護管理。"
+      },
+      {
+        scenario: "繳費與註冊費單",
+        question: "開學時老師發下學雜費繳費單，家長繳費後拿到的收據需要送回學校核對。處理全校學費收繳與發放款項的是哪一個組？",
+        options: [
+          { text: "總務處 - 出納組", correct: true }, // [A]
+          { text: "主計室", correct: false },
+          { text: "教務處 - 註冊組", correct: false },
+          { text: "學務處 - 訓育組", correct: false }
+        ],
+        analysis: "【總務處出納組】負責收取學生學雜費、發放教職員薪資以及各項款項的收付登記。（註冊組是管成績和學籍，出納組才是管錢喔！）"
+      },
+      {
+        scenario: "心理困擾與傾訴",
+        question: "進入國中後感覺學習壓力有點大、跟朋友吵架心情低落，想找專業老師聊聊天、做心理測驗，可以去哪裡？",
+        options: [
+          { text: "學務處 - 生輔組", correct: false },
+          { text: "輔導室 - 輔導組", correct: true }, // [B]
+          { text: "教務處 - 設備組", correct: false },
+          { text: "圖書館", correct: false }
+        ],
+        analysis: "【輔導室輔導組】提供個別心理諮商、團體輔導與心理測驗，隨時歡迎同學們去聊心事、尋求協助。"
+      },
+      {
+        scenario: "體育器材與賽事",
+        question: "班際籃球賽即將開打，體育股長想要借用排球和籃球來練習，應該向哪一個單位登記借用？",
+        options: [
+          { text: "教務處 - 設備組", correct: false },
+          { text: "總務處 - 事務組", correct: false },
+          { text: "學務處 - 衛生組", correct: false },
+          { text: "學務處 - 體育組", correct: true } // [D]
+        ],
+        analysis: "【學務處體育組】負責舉辦校運會、班際體育競賽、管理體育器材以及培訓學校運動代表隊。"
+      },
+      {
+        scenario: "環境整潔與回收",
+        question: "打掃時間到了，班上需要領取新的掃帚、垃圾袋，或是需要詢問資源回收分類的標準，應該洽詢哪一個組別？",
+        options: [
+          { text: "總務處 - 事務組", correct: false },
+          { text: "教務處 - 設備組", correct: false },
+          { text: "學務處 - 衛生組", correct: true }, // [C]
+          { text: "輔導室 - 資料組", correct: false }
+        ],
+        analysis: "【學務處衛生組】負責校園環境清潔分配、資源回收與垃圾分類、學生健康檢查以及餐飲衛生督導。"
+      },
+      {
+        scenario: "圖書教科書與閱讀",
+        question: "開學時發放的新教科書（課本）如果不小心缺頁需要換新，或是學校舉辦「科學展覽」比賽，是由哪一個單位負責？",
+        options: [
+          { text: "圖書館", correct: false },
+          { text: "總務處 - 事務組", correct: false },
+          { text: "教務處 - 註冊組", correct: false },
+          { text: "教務處 - 設備組", correct: true } // [D]
+        ],
+        analysis: "【教務處設備組】負責管理教科書評選與發放、教學器材設備以及舉辦科學展覽競賽喔！"
+      }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let answered = false;
+    let currentStudentClass = "";
+    let currentStudentName = "";
+    const quizRecords = [];
+
+    // Start Quiz after user enters class and nickname
+    function startQuizWithInfo(e) {
+      e.preventDefault();
+      currentStudentClass = document.getElementById('input-class-name').value.trim();
+      currentStudentName = document.getElementById('input-student-name').value.trim();
+
+      if (!currentStudentClass || !currentStudentName) return;
+
+      document.getElementById('start-container').classList.add('hidden');
+      document.getElementById('quiz-header').classList.remove('hidden');
+      document.getElementById('quiz-header').classList.add('flex');
+      document.getElementById('quiz-container').classList.remove('hidden');
+
+      document.getElementById('student-badge-display').innerText = `${currentStudentClass} ${currentStudentName}`;
+      loadQuestion();
+    }
+
+    // Toggle Teacher Dashboard Modal
+    function toggleTeacherDashboardModal() {
+      const modal = document.getElementById('dashboard-modal');
+      modal.classList.toggle('hidden');
+    }
+
+    // Initialize Quiz
+    function loadQuestion() {
+      answered = false;
+      const q = questions[currentQuestionIndex];
+      
+      // Update Progress
+      document.getElementById('progress-text').innerText = `第 ${currentQuestionIndex + 1} / ${questions.length} 題`;
+      document.getElementById('progress-bar').style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+      document.getElementById('question-tag').innerHTML = `<i class="fa-solid fa-location-dot"></i> 情境：${q.scenario}`;
+      document.getElementById('question-text').innerText = q.question;
+      
+      // Reset analysis card & next button
+      const analysisCard = document.getElementById('analysis-card');
+      analysisCard.classList.add('hidden');
+      analysisCard.className = 'hidden rounded-2xl p-4 transition-all duration-300 mb-4';
+      document.getElementById('next-btn').classList.add('hidden');
+
+      // Populate Options
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-option w-full text-left p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-400 bg-slate-50 text-slate-700 font-bold text-sm md:text-base flex items-center justify-between transition-all';
+        btn.innerHTML = `
+          <span>${String.fromCharCode(65 + idx)}. ${opt.text}</span>
+          <i class="fa-regular fa-circle text-slate-300 text-lg icon-status"></i>
+        `;
+        btn.onclick = () => selectOption(idx, opt.correct, btn);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    // Handle Option Selection
+    function selectOption(selectedIndex, isCorrect, selectedBtn) {
+      if (answered) return;
+      answered = true;
+
+      const q = questions[currentQuestionIndex];
+      const buttons = document.querySelectorAll('#options-container button');
+      const analysisCard = document.getElementById('analysis-card');
+      const analysisIcon = document.getElementById('analysis-icon');
+      const analysisTitle = document.getElementById('analysis-title');
+      const analysisText = document.getElementById('analysis-text');
+
+      // Disable all option buttons
+      buttons.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (q.options[idx].correct) {
+          btn.classList.remove('border-slate-200', 'bg-slate-50', 'hover:border-indigo-400');
+          btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-800');
+          btn.querySelector('.icon-status').className = 'fa-solid fa-circle-check text-emerald-500 text-lg';
+        }
+      });
+
+      if (isCorrect) {
+        score += 10;
+        document.getElementById('score-text').innerText = `${score} 分`;
+        
+        // Sound & Visual Effect
+        playCheerSound();
+        triggerConfetti();
+
+        // Show Correct Feedback
+        analysisCard.classList.remove('hidden');
+        analysisCard.classList.add('bg-emerald-50', 'border', 'border-emerald-200', 'text-emerald-900');
+        analysisIcon.innerHTML = '🎉';
+        analysisTitle.innerText = '答對了！太厲害了！';
+        analysisTitle.className = 'font-bold text-base mb-1 text-emerald-800';
+        analysisText.innerText = q.analysis;
+
+      } else {
+        // Sound Effect
+        playWrongSound();
+
+        // Highlight Wrong Choice
+        selectedBtn.classList.remove('border-slate-200', 'bg-slate-50');
+        selectedBtn.classList.add('border-rose-500', 'bg-rose-50', 'text-rose-800');
+        selectedBtn.querySelector('.icon-status').className = 'fa-solid fa-circle-xmark text-rose-500 text-lg';
+
+        // Show Incorrect Feedback / Hint
+        analysisCard.classList.remove('hidden');
+        analysisCard.classList.add('bg-amber-50', 'border', 'border-amber-200', 'text-amber-900');
+        analysisIcon.innerHTML = '💡';
+        analysisTitle.innerText = '答錯囉！觀念小解析：';
+        analysisTitle.className = 'font-bold text-base mb-1 text-amber-800';
+        analysisText.innerText = q.analysis;
+      }
+
+      // Show Next Button
+      const nextBtn = document.getElementById('next-btn');
+      nextBtn.classList.remove('hidden');
+      nextBtn.classList.add('flex');
+    }
+
+    // Confetti Cannon Effect
+    function triggerConfetti() {
+      confetti({
+        particleCount: 70,
+        spread: 60,
+        origin: { y: 0.7 },
+        colors: ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6']
+      });
+    }
+
+    // Next Question or Show Results
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        loadQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    // Show Final Results Card & Update Record Dashboard
+    function showResults() {
+      document.getElementById('quiz-container').classList.add('hidden');
+      const resultContainer = document.getElementById('result-container');
+      resultContainer.classList.remove('hidden');
+
+      document.getElementById('final-score').innerText = `${score} 分`;
+
+      // Save score locally to dashboard table
+      recordQuizScore(currentStudentClass, currentStudentName, score);
+
+      const finalRating = document.getElementById('final-rating');
+      if (score === 100) {
+        finalRating.innerText = '🏆 滿分！你絕對是國中校園活字典！';
+        triggerConfetti();
+        setTimeout(triggerConfetti, 500);
+      } else if (score >= 80) {
+        finalRating.innerText = '🌟 優秀！你對學校處室相當熟悉囉！';
+      } else if (score >= 60) {
+        finalRating.innerText = '👍 及格！再多看幾次處室地圖會更讚！';
+      } else {
+        finalRating.innerText = '💪 別灰心，點擊下方處室地圖寶典複習一下吧！';
+      }
+    }
+
+    function recordQuizScore(className, studentName, finalScore) {
+      quizRecords.unshift({
+        className,
+        studentName,
+        score: finalScore,
+        timestamp: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+      });
+      updateDashboardUI();
+    }
+
+    function updateDashboardUI() {
+      document.getElementById('dash-total-count').innerText = quizRecords.length;
+      if (quizRecords.length > 0) {
+        const totalScore = quizRecords.reduce((acc, cur) => acc + cur.score, 0);
+        const avgScore = Math.round(totalScore / quizRecords.length);
+        document.getElementById('dash-avg-score').innerText = `${avgScore} 分`;
+        
+        const perfects = quizRecords.filter(r => r.score === 100).length;
+        document.getElementById('dash-perfect-count').innerText = `${perfects} 人`;
+
+        const tbody = document.getElementById('dash-table-body');
+        tbody.innerHTML = '';
+        quizRecords.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="p-3 text-xs text-slate-400">${r.timestamp}</td>
+            <td class="p-3 font-bold">${r.className}</td>
+            <td class="p-3">${r.studentName}</td>
+            <td class="p-3 text-right font-black text-indigo-600">${r.score} 分</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    // Restart Quiz
+    function restartQuiz() {
+      currentQuestionIndex = 0;
+      score = 0;
+      document.getElementById('score-text').innerText = '0 分';
+      document.getElementById('result-container').classList.add('hidden');
+      document.getElementById('quiz-container').classList.remove('hidden');
+      loadQuestion();
+    }
+
+    // Toggle Cheat Sheet Modal
+    function toggleCheatSheet() {
+      const modal = document.getElementById('cheatsheet-modal');
+      modal.classList.toggle('hidden');
+    }
+
+    // QR Code Functionalities
+    let qrCodeObj = null;
+
+    function toggleQRCodeModal() {
+      const modal = document.getElementById('qrcode-modal');
+      modal.classList.toggle('hidden');
+
+      if (!modal.classList.contains('hidden')) {
+        const currentUrl = window.location.href;
+        const input = document.getElementById('qr-url-input');
+        if (!input.value) {
+          input.value = currentUrl;
+        }
+        generateQRCode(input.value);
+      }
+    }
+
+    function generateQRCode(text) {
+      const container = document.getElementById('qrcode-container');
+      container.innerHTML = '';
+      
+      qrCodeObj = new QRCode(container, {
+        text: text,
+        width: 180,
+        height: 180,
+        colorDark: "#312e81",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    function updateQRCode() {
+      const url = document.getElementById('qr-url-input').value.trim();
+      if (url) {
+        generateQRCode(url);
+      }
+    }
+
+    function downloadQRCode() {
+      const img = document.querySelector('#qrcode-container img');
+      const canvas = document.querySelector('#qrcode-container canvas');
+      let imageSrc = '';
+
+      if (img && img.src) {
+        imageSrc = img.src;
+      } else if (canvas) {
+        imageSrc = canvas.toDataURL('image/png');
+      }
+
+      if (imageSrc) {
+        const link = document.createElement('a');
+        link.href = imageSrc;
+        link.download = '七年級處室解謎測驗_QRCode.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+
+    function printQRPoster() {
+      const img = document.querySelector('#qrcode-container img');
+      const canvas = document.querySelector('#qrcode-container canvas');
+      let imageSrc = img ? img.src : (canvas ? canvas.toDataURL('image/png') : '');
+
+      if (!imageSrc) return;
+
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>七年級校園處室解謎測驗 - 掃碼海報</title>
+          <style>
+            body { font-family: 'Noto Sans TC', sans-serif; text-align: center; padding: 40px; }
+            .card { border: 8px solid #4f46e5; border-radius: 24px; padding: 40px; max-width: 500px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+            h1 { color: #312e81; font-size: 28px; margin-bottom: 8px; }
+            h2 { color: #4f46e5; font-size: 20px; margin-top: 0; }
+            img { width: 240px; height: 240px; margin: 20px 0; border: 4px solid #e0e7ff; border-radius: 16px; padding: 12px; }
+            p { font-size: 16px; color: #475569; font-weight: bold; }
+            .footer { margin-top: 20px; font-size: 12px; color: #94a3b8; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h1>🏫 國中校園大探險！</h1>
+            <h2>七年級行政處室解謎測驗</h2>
+            <img src="${imageSrc}" />
+            <p>📱 請拿起手機 / 平板打開相機掃描 QR Code 挑戰！</p>
+            <div class="footer">恭喜開啟國中生活！看誰能獲得 100 分滿分！</div>
+          </div>
+          <script>
+            window.onload = function() { window.print(); }
+          <\/script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  </script>
+</body>
+</html>
